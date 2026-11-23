@@ -1,14 +1,18 @@
 # RuleMonitor
 
-Watches rule metrics over time and decides whether a move is real — then names the four
-different reasons an alert might *not* have fired, because only one of them means healthy.
+A rule's hit rate drops 40% and stays there. Did something break, or did the world change?
+RuleMonitor watches rule metrics period by period and decides whether a move is real. When no
+alert fires, it says which of four reasons applies, because only one of them means the rule is
+healthy.
 
-No model. This is a small time-series problem and the accuracy question is which threshold,
-which is arithmetic.
+Its most useful result is a negative one: on the shipped data, the fixed threshold that was
+supposed to be replaced beats the statistical detectors by more than five times on F1.
 
 ---
 
-## The Brief Said Replace Fixed Thresholds. The Measurement Disagreed.
+## Fixed Thresholds Were Supposed to Lose. They Won.
+
+The requirements note this project started from recommended:
 
 > *"Fixed thresholds produce false alarms. Add statistical anomaly detection (rolling mean + 2σ)."*
 
