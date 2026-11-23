@@ -1,0 +1,45 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.9
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-added-large-files
+        args: [--maxkb=500]
+      - id: check-merge-conflict
+
+  - repo: local
+    hooks:
+      # The corpus is sample data the property tests assert against. An incident naming a rule
+      # or a period we do not hold would make every recall figure quietly wrong.
+      - id: corpus-is-consistent
+        name: every incident names a rule and periods that exist
+        entry: >
+          python -c "import sys; sys.path.insert(0, 'src');
+          from pathlib import Path;
+          from rule_monitor.sources import load_rules, load_observations, load_incidents;
+          from rule_monitor.series import build_series;
+          r, rp = load_rules(Path('data/rules.jsonl'));
+          o, op = load_observations(Path('data/observations.jsonl'));
+          i, ip = load_incidents(Path('data/incidents.jsonl'));
+          assert not (rp + op + ip), rp + op + ip;
+          s = build_series(o);
+          bad = [x.rule_id for x in i if x.rule_id not in s];
+          assert not bad, f'incidents name unknown rules: {bad}';
+          spans = [(x.rule_id, x.first_period, x.last_period) for x in i
+                   if x.first_period < s[x.rule_id].first_period
+                   or x.last_period > s[x.rule_id].last_period];
+          assert not spans, f'incidents outside the observed range: {spans}';
+          print(f'{len(r)} rules, {len(o)} observations, {len(i)} incidents, all consistent')"
+        language: system
+        pass_filenames: false
+        files: ^data/

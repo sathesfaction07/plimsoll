@@ -1,0 +1,167 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install
+        run: pip install -e ".[dev]"
+
+      - name: Lint
+        run: ruff check src tests
+
+      - name: Test
+        run: pytest -q --cov=rule_monitor --cov-report=term-missing
+
+      - name: Doctor runs with no credentials and no network
+        run: rule-monitor doctor
+
+      - name: The MAD constant is derived, not assumed
+        run: |
+          python - <<'PY'
+          import random, statistics
+          from rule_monitor.stats import MAD_SCALE, mad, stdev
+          rng = random.Random(11)
+          ratios = [
+              stdev(s) / mad(s, scaled=False)
+              for s in ([rng.gauss(0.0, 1.0) for _ in range(4000)] for _ in range(60))
+          ]
+          observed = statistics.fmean(ratios)
+          assert abs(observed - MAD_SCALE) < 0.01, observed
+          print(f"stdev/MAD = {observed:.4f}, constant = {MAD_SCALE}")
+          PY
+
+      - name: Breakdown points are 0% and ~50%
+        run: |
+          python - <<'PY'
+          from rule_monitor.stats import breakdown_count, mad, stdev
+          # ONE outlier moves stdev a long way.
+          assert stdev([100.0] * 8) == 0.0
+          assert stdev([100.0] * 7 + [150.0]) > 15.0
+          # MAD is unmoved until MORE THAN HALF the window is contaminated.
+          for count in (1, 2, 3):
+              assert mad([100.0] * (8 - count) + [150.0] * count) == 0.0, count
+          assert mad([100.0] * 4 + [150.0] * 4) > 0.0
+          assert breakdown_count(8, robust=False) == 0
+          assert breakdown_count(8, robust=True) == 3
+          print("breakdown points hold")
+          PY
+
+      - name: The false-alarm budget matches simulation
+        run: |
+          python - <<'PY'
+          import random
+          from rule_monitor.detect import false_alarm_budget, normal_tail
+          rng = random.Random(5)
+          draws = [rng.gauss(0.0, 1.0) for _ in range(200_000)]
+          for k in (2.0, 2.5, 3.0):
+              exact = normal_tail(k)
+              sim = sum(1 for v in draws if v > k) / len(draws)
+              assert abs(exact - sim) < 0.003, (k, exact, sim)
+          b = false_alarm_budget(2.0, rules=40, periods=52)
+          assert abs(b.per_rule_per_year - 1.183) < 0.01, b.per_rule_per_year
+          assert abs(b.fleet_total - 47.32) < 0.05, b.fleet_total
+          print(f"per rule {b.per_rule_per_year:.2f}, fleet {b.fleet_total:.1f}")
+          PY
+
+      - name: A rolling baseline absorbs a sustained shift and a fixed one does not
+        run: |
+          python - <<'PY'
+          from rule_monitor.detect import evaluate_series
+          from rule_monitor.models import Detector, Direction, Observation, Outcome, Rule
+          from rule_monitor.series import Series
+
+          values = [100.0] * 12 + [140.0] * 14
+          series = Series("r", [
+              Observation(rule_id="r", period=i, value=v) for i, v in enumerate(values)
+          ])
+          rule = Rule(rule_id="r", metric="m", direction=Direction.UP)
+
+          for detector in (Detector.SIGMA, Detector.ROBUST):
+              outcomes = [x.outcome for x in evaluate_series(rule, series, detector, window=6)]
+              alerts = sum(1 for o in outcomes if o.is_alert)
+              # A permanent 40% degradation over 14 periods, and a handful of alerts.
+              assert alerts < 6, (detector, alerts)
+              assert Outcome.ABSORBED in outcomes or detector is Detector.ROBUST
+
+          fixed = Rule(rule_id="r", metric="m", direction=Direction.UP, fixed_threshold=120.0)
+          alerts = sum(
+              1 for x in evaluate_series(fixed, series, Detector.FIXED) if x.outcome.is_alert
+          )
+          assert alerts == 14, alerts
+          print("rolling absorbs it; fixed fires on all 14")
+
+          # And the remedy has a horizon: past ~2x the window the reference has drifted too.
+          long_series = Series("r", [
+              Observation(rule_id="r", period=i, value=v)
+              for i, v in enumerate([100.0] * 10 + [140.0] * 40)
+          ])
+          tail = [
+              x.outcome for x in evaluate_series(rule, long_series, Detector.SIGMA, window=6)
+          ][-10:]
+          assert all(o is Outcome.QUIET for o in tail), tail
+          print("ABSORBED decays back to QUIET on an old step -- stated, not hidden")
+          PY
+
+      - name: The shipped corpus produces the documented figures
+        run: |
+          rule-monitor compare -o /tmp/cmp
+          python - <<'PY'
+          import json
+          payload = json.load(open("/tmp/cmp/compare.json"))
+          rows = {r["detector"]: r for r in payload["detectors"]}
+          assert payload["rules"] == 26, payload["rules"]
+          assert payload["incidents"] == 6, payload["incidents"]
+          # The brief recommended replacing fixed thresholds with rolling sigma. It loses.
+          assert payload["preferred"] == "fixed", payload["preferred"]
+          assert rows["fixed"]["f1"] > 3 * rows["sigma"]["f1"]
+          assert rows["fixed"]["f1"] > 3 * rows["robust"]["f1"]
+          # Robust raises MORE false alarms than sigma on cyclic data.
+          assert rows["robust"]["false_positives"] > rows["sigma"]["false_positives"]
+          # Everything catches a spike; only fixed holds a step or a drift.
+          for d in ("fixed", "sigma", "robust"):
+              assert rows[d]["recall_by_kind"]["spike"] == 1.0, d
+          assert rows["sigma"]["recall_by_kind"]["step"] < 0.3
+          assert rows["fixed"]["recall_by_kind"]["step"] > 0.8
+          # Long silent runs only for the rolling detectors.
+          assert max(r["periods"] for r in rows["sigma"]["silent_runs"]) >= 10
+          assert max((r["periods"] for r in rows["fixed"]["silent_runs"]), default=0) < 10
+          # Every outcome occurs, so the assertions are not vacuous.
+          for d in ("fixed", "sigma", "robust"):
+              assert set(rows[d]["outcomes"]) == {
+                  "fired", "quiet", "absorbed", "blind", "untrained", "degenerate"
+              }
+          print("preferred:", payload["preferred"])
+          PY
+
+      - name: watch gates on a duplicated period but reports gaps as blind
+        run: |
+          ! rule-monitor watch
+          rule-monitor watch | grep -q 'observed more than once'
+          rule-monitor watch | grep -q 'BLIND, not healthy'
+          rule-monitor watch | grep -q 'Only QUIET means healthy'
+          rule-monitor watch | grep -q 'Silence here is a lie'
+          rule-monitor watch -d fixed | grep -qv 'Silence here is a lie' || true
+          echo "gated on the duplicate, reported the blindness and the absorption"
+
+      - name: explain shows both spreads and flags a zero-spread baseline
+        run: |
+          rule-monitor explain r-step 26 | grep -q 'tolerates 0 contaminated'
+          rule-monitor explain r-flat 42 | grep -q 'ZERO SPREAD'
+          rule-monitor explain r-delayed 34 | grep -q 'BLIND'
+          echo "explain works"

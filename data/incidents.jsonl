@@ -1,0 +1,6 @@
+{"rule_id": "r-spike", "first_period": 24, "last_period": 24, "kind": "spike"}
+{"rule_id": "r-step", "first_period": 20, "last_period": 51, "kind": "step"}
+{"rule_id": "r-drift", "first_period": 34, "last_period": 51, "kind": "drift"}
+{"rule_id": "r-delayed", "first_period": 32, "last_period": 35, "kind": "spike"}
+{"rule_id": "r-flat", "first_period": 41, "last_period": 51, "kind": "step"}
+{"rule_id": "r-throughput", "first_period": 44, "last_period": 48, "kind": "step"}
