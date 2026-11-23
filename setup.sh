@@ -299,13 +299,13 @@ Setup complete.
 
   source .venv/bin/activate
 
-  rule-monitor doctor
-  rule-monitor watch   -d sigma
-  rule-monitor watch   -d fixed
-  rule-monitor compare
-  rule-monitor compare -k 3.0            # see the budget shrink and the recall with it
-  rule-monitor explain r-step 26
-  rule-monitor explain r-flat 42         # a zero-spread baseline
+  plimsoll doctor
+  plimsoll watch   -d sigma
+  plimsoll watch   -d fixed
+  plimsoll compare
+  plimsoll compare -k 3.0            # see the budget shrink and the recall with it
+  plimsoll explain r-step 26
+  plimsoll explain r-flat 42         # a zero-spread baseline
 
 `watch` exits non-zero on an unreadable row or a duplicated period, because both make a
 threshold arbitrary. It does NOT fail on a blind period: delayed data is normal, and a check

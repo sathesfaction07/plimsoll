@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "rule-monitor"
+name = "plimsoll"
 version = "0.1.0"
 description = "Statistical anomaly detection for monitored rules, with the blind spots named"
 requires-python = ">=3.11"
@@ -21,7 +21,7 @@ dev = [
 ]
 
 [project.scripts]
-rule-monitor = "rule_monitor.cli:cli"
+plimsoll = "rule_monitor.cli:cli"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/rule_monitor"]

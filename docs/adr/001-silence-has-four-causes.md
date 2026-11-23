@@ -51,7 +51,7 @@ Two derived properties keep the distinctions usable at the call sites:
 ### Honest about the pattern
 
 **This is the third project in this portfolio to replace a boolean with an enum for the same
-underlying reason** — MultiExtract has five completeness verdicts, CaseSearch four. That makes
+underlying reason** — Headcount has five completeness verdicts, Kinship four. That makes
 it a recurring pattern rather than an insight, and saying so is more useful than presenting it
 as fresh. What is specific here is *which* failures get names: `ABSORBED` and `DEGENERATE` are
 properties of rolling-window statistics and have no analogue in either sibling project.

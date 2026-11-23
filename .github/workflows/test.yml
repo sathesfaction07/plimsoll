@@ -29,7 +29,7 @@ jobs:
         run: pytest -q --cov=rule_monitor --cov-report=term-missing
 
       - name: Doctor runs with no credentials and no network
-        run: rule-monitor doctor
+        run: plimsoll doctor
 
       - name: The MAD constant is derived, not assumed
         run: |
@@ -120,7 +120,7 @@ jobs:
 
       - name: The shipped corpus produces the documented figures
         run: |
-          rule-monitor compare -o /tmp/cmp
+          plimsoll compare -o /tmp/cmp
           python - <<'PY'
           import json
           payload = json.load(open("/tmp/cmp/compare.json"))
@@ -151,19 +151,19 @@ jobs:
 
       - name: watch gates on a duplicated period but reports gaps as blind
         run: |
-          ! rule-monitor watch
-          rule-monitor watch | grep -q 'observed more than once'
-          rule-monitor watch | grep -q 'BLIND, not healthy'
-          rule-monitor watch | grep -q 'Only QUIET means healthy'
-          rule-monitor watch | grep -q 'Silence here is a lie'
-          rule-monitor watch -d fixed | grep -qv 'Silence here is a lie' || true
+          ! plimsoll watch
+          plimsoll watch | grep -q 'observed more than once'
+          plimsoll watch | grep -q 'BLIND, not healthy'
+          plimsoll watch | grep -q 'Only QUIET means healthy'
+          plimsoll watch | grep -q 'Silence here is a lie'
+          plimsoll watch -d fixed | grep -qv 'Silence here is a lie' || true
           echo "gated on the duplicate, reported the blindness and the absorption"
 
       - name: explain shows both spreads and flags a zero-spread baseline
         run: |
-          rule-monitor explain r-step 26 | grep -q 'tolerates 0 contaminated'
-          rule-monitor explain r-flat 42 | grep -q 'ZERO SPREAD'
-          rule-monitor explain r-delayed 34 | grep -q 'BLIND'
+          plimsoll explain r-step 26 | grep -q 'tolerates 0 contaminated'
+          plimsoll explain r-flat 42 | grep -q 'ZERO SPREAD'
+          plimsoll explain r-delayed 34 | grep -q 'BLIND'
           echo "explain works"
 
   test-windows:

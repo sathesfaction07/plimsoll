@@ -1,7 +1,7 @@
-# RuleMonitor
+# Plimsoll
 
 A rule's hit rate drops 40% and stays there. Did something break, or did the world change?
-RuleMonitor watches rule metrics period by period and decides whether a move is real. When no
+Plimsoll watches rule metrics period by period and decides whether a move is real. When no
 alert fires, it says which of four reasons applies, because only one of them means the rule is
 healthy.
 
@@ -150,13 +150,13 @@ multiplied.** Exact via `erfc`, cross-checked against 200,000 simulated draws.
 bash setup.sh                 # derives the MAD constant, the breakdown points and the absorption
 source .venv/bin/activate
 
-rule-monitor doctor
-rule-monitor watch   -d sigma
-rule-monitor watch   -d fixed
-rule-monitor compare
-rule-monitor compare -k 3.0            # watch the budget shrink and the recall with it
-rule-monitor explain r-step 26
-rule-monitor explain r-flat 42         # a zero-spread baseline
+plimsoll doctor
+plimsoll watch   -d sigma
+plimsoll watch   -d fixed
+plimsoll compare
+plimsoll compare -k 3.0            # watch the budget shrink and the recall with it
+plimsoll explain r-step 26
+plimsoll explain r-flat 42         # a zero-spread baseline
 ```
 
 | Command | Purpose | Exit |

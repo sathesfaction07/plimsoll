@@ -1,4 +1,4 @@
-# RuleMonitor — Technical Architecture
+# Plimsoll — Technical Architecture
 
 ## Overview
 
@@ -17,7 +17,7 @@ No model — this is a small time-series problem and the accuracy question is wh
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│                        CLI (rule-monitor)                                     │
+│                        CLI (plimsoll)                                     │
 │                                                                              │
 │  watch    every rule and period under ONE detector                            │
 │           EXIT 1 on an unreadable row or a DUPLICATED PERIOD -- both make a    │
@@ -202,7 +202,7 @@ is what shipped.
 ## Data Flow
 
 ```
-1.  rule-monitor compare
+1.  plimsoll compare
 2.  load 26 rules, 1266 observations, 6 incidents
       duplicate period ('r-dup', 7)      -> reported, and it fails `watch`
       orphan rule 'r-unknown'            -> reported, does not fail: the rule list or the
