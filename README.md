@@ -60,11 +60,11 @@ Six outcomes, because "did not fire" has four causes with four different remedie
 | `fired` | the value exceeded the threshold |
 | `quiet` | it did not, and the baseline was sound. **The only outcome that means healthy** |
 | `absorbed` | quiet, *and* the level has shifted from an older reference. The degradation is real and the detector has stopped saying so. **Silence here is a lie** |
-| `blind` | no observation arrived. Unmeasured, not healthy — the brief's *"rules that should fire but didn't because data is delayed"* |
+| `blind` | no observation arrived. Unmeasured, not healthy — the project brief's *"rules that should fire but didn't because data is delayed"* |
 | `untrained` | too little history to estimate a spread |
 | `degenerate` | fired, but from a zero-spread baseline, so the threshold had collapsed onto the centre and the magnitude means nothing |
 
-This is the third project in this portfolio to replace a boolean with an enum for the same
+This is the third project in this series to replace a boolean with an enum for the same
 underlying reason, so it is a pattern rather than an insight. What is specific here is *which*
 failures get names — `absorbed` and `degenerate` are properties of rolling-window statistics
 that no care elsewhere prevents.
@@ -122,7 +122,7 @@ than σ, the threshold is *tighter*, and every seasonal peak fires.
 
 Being robust to outliers makes it worse when the "outliers" are the signal.
 
-And the brief's own complaint — that fixed thresholds suffer from seasonal false alarms — is
+And the project brief's own complaint — that fixed thresholds suffer from seasonal false alarms — is
 half right. All 13 of the fixed threshold's false alarms come from the seasonal rule, and no
 other rule. It is just that the statistical detectors have that problem *and* five more.
 
@@ -245,12 +245,12 @@ outside every incident, so it cannot be attributed to one shape. Only recall is 
 and the breakdown is where the whole story is: everything catches a spike at 100%, and only the
 fixed threshold holds on to a step (86.5% vs 12.5%) or a drift (72.2% vs 22.2%).
 
-**No email or Slack routing, despite the brief asking.** Routing is plumbing; deciding whether
+**No email or Slack routing, despite the project brief asking.** Routing is plumbing; deciding whether
 to route is the hard part, and it is what the exit codes and the six outcomes are for. A
 notification cannot be asserted in CI. The same reasoning applies to the requested terminal
 charts: a text table asserts, a plot does not.
 
-**Excluded `statsmodels` and Prophet, which the brief listed as options.** Seasonal
+**Excluded `statsmodels` and Prophet, which the project brief listed as options.** Seasonal
 decomposition would genuinely help the one cyclic rule — and it would not touch absorption,
 which is the dominant failure here and is structural rather than statistical. Adding a heavy
 dependency to fix the second-biggest problem while the biggest one is a design question would

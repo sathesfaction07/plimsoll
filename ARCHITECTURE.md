@@ -5,7 +5,7 @@
 Watches rule metrics over time, decides whether a move is real, and names the four different
 reasons an alert might not have fired — because only one of them means healthy.
 
-**Design principle:** the brief's recommendation (replace fixed thresholds with rolling mean+2σ)
+**Design principle:** the project brief's recommendation (replace fixed thresholds with rolling mean+2σ)
 is a claim, so it is tested rather than implemented. On the shipped corpus it is wrong, and the
 architecture is shaped by *why*.
 
@@ -83,7 +83,7 @@ No model — this is a small time-series problem and the accuracy question is wh
 │                                                                              │
 │  FIXED    a hand-set constant. No baseline, so nothing to contaminate and     │
 │           NOTHING TO ABSORB                                                   │
-│  SIGMA    rolling mean + k*stdev. The brief's recommendation                   │
+│  SIGMA    rolling mean + k*stdev. The project brief's recommendation                   │
 │  ROBUST   rolling median + k*MAD                                              │
 │                                                                              │
 │  Check order = order of severity of not knowing:                              │
@@ -149,7 +149,7 @@ A rolling baseline compares the present against the recent past. A degradation t
 by construction — **whatever statistic summarises it.** Robustness fixes contamination and does
 nothing here.
 
-### Which inverts the brief
+### Which inverts the project brief
 
 | detector | precision | recall | F1 | FP |
 |:--|--:|--:|--:|--:|
@@ -169,7 +169,7 @@ Everything catches a spike. Only fixed holds on to a step or a drift.
 window sits at the trough, so MAD is *smaller* than σ, the threshold is *tighter*, and every
 seasonal peak fires. Being robust to outliers is a liability when the "outliers" are the signal.
 
-All 13 of fixed's false alarms come from the seasonal rule and no other — so the brief's
+All 13 of fixed's false alarms come from the seasonal rule and no other — so the project brief's
 complaint about fixed thresholds and seasonality is half right; the statistical detectors have
 that problem *and* two more.
 
@@ -187,7 +187,7 @@ The reference window slides forward too, so past ~2× the window it is itself in
 era and `ABSORBED` decays back to `QUIET`. There is a test asserting the decay.
 
 **The only reference point that cannot drift is one not computed from recent data at all — which
-is what a fixed threshold is.** The measurement did not just contradict the brief, it explained
+is what a fixed threshold is.** The measurement did not just contradict the project brief, it explained
 why.
 
 ### A prediction of mine that measurement refuted

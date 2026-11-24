@@ -1,4 +1,4 @@
-# ADR 002: The brief said replace fixed thresholds with rolling σ. The measurement said no.
+# ADR 002: The project brief said replace fixed thresholds with rolling σ. The measurement said no.
 
 ## Status
 
@@ -6,7 +6,7 @@ Accepted
 
 ## Context
 
-The brief was explicit:
+The project brief was explicit:
 
 > **Verdict:** Add statistical anomaly detection (local via statsmodels). Fixed thresholds
 > produce false alarms. No cloud needed — this is a small time-series problem.
@@ -15,7 +15,7 @@ That is the conventional recommendation and it is wrong on this data. Three dete
 so the claim could be tested rather than assumed:
 
 - `FIXED` — a hand-set constant. No baseline, so nothing to contaminate and nothing to absorb.
-- `SIGMA` — rolling mean + k·σ. The brief's recommendation. Breakdown point **0%**.
+- `SIGMA` — rolling mean + k·σ. The project brief's recommendation. Breakdown point **0%**.
 - `ROBUST` — rolling median + k·MAD. Breakdown point **~50%**.
 
 MAD is scaled by 1.4826 so the same `k` means the same thing for both, otherwise the comparison
@@ -69,7 +69,7 @@ On a 4-period cycle most of the window sits at the trough, so MAD is *smaller* t
 threshold is *tighter*, and every seasonal peak fires. Being robust to outliers is a liability
 when the "outliers" are the signal.
 
-And the brief's own complaint is half right: all 13 of fixed's false alarms come from the
+And the project brief's own complaint is half right: all 13 of fixed's false alarms come from the
 seasonal rule and no other. It is just that the statistical detectors have that problem *and*
 absorption *and* drift-following.
 
@@ -108,7 +108,7 @@ There is a test asserting exactly that decay.
 
 **This closes the argument.** The only reference point that cannot drift is one not computed from
 recent data at all — which is precisely what a fixed threshold is. The measurement did not merely
-contradict the brief; it explained why.
+contradict the project brief; it explained why.
 
 ### The false-alarm budget is arithmetic, and it is published
 
@@ -146,7 +146,7 @@ budget assumes. Seasonality is the usual reason, and the report says so.
 
 **Good**
 
-- The brief's recommendation was tested rather than implemented on authority, and the test is in
+- The project brief's recommendation was tested rather than implemented on authority, and the test is in
   CI so it cannot quietly stop being true
 - The reason fixed wins is explained structurally, not just observed
 - Both statistics ship, so the contamination/absorption distinction is demonstrable rather than
@@ -174,6 +174,6 @@ budget assumes. Seasonality is the usual reason, and the report says so.
 - Scoring is per period, not per incident: a 32-period degradation caught once is one hit and 31
   misses, which is what an operator watching weekly experiences. Per-incident scoring would call
   it a success and hide the absorption entirely
-- `statsmodels` and Prophet were excluded despite the brief listing them. Seasonal decomposition
+- `statsmodels` and Prophet were excluded despite the project brief listing them. Seasonal decomposition
   would help the one cyclic rule and would not touch absorption — adding a heavy dependency to fix
   the second-biggest problem while the biggest is a design question is the wrong order

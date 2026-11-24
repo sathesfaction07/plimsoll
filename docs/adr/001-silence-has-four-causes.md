@@ -7,7 +7,7 @@ Accepted
 ## Context
 
 A monitoring tool's natural output is a list of alerts. That list is silent about everything it
-did not say, and the brief names the exact failure this hides:
+did not say, and the project brief names the exact failure this hides:
 
 > *"rules that should fire but didn't because data is delayed"*
 
@@ -50,7 +50,7 @@ Two derived properties keep the distinctions usable at the call sites:
 
 ### Honest about the pattern
 
-**This is the third project in this portfolio to replace a boolean with an enum for the same
+**This is the third project in this series to replace a boolean with an enum for the same
 underlying reason** — Headcount has five completeness verdicts, Kinship four. That makes
 it a recurring pattern rather than an insight, and saying so is more useful than presenting it
 as fresh. What is specific here is *which* failures get names: `ABSORBED` and `DEGENERATE` are
